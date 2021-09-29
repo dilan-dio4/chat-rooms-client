@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
+import AvatarGroup from 'react-avatar-group';
 
 function Room({ currentRoom }) {
     const [messageVal, setMessageVal] = useState("");
     const [receivedMessages, setReceivedMessages] = useState([]);
+    const [activeUsers, setActiveUsers] = useState([]);
     const socketRef = useRef();
 
     useEffect(() => {
         setMessageVal("");
         setReceivedMessages([]);
+        setActiveUsers([])
 
         socketRef.current = new WebSocket("ws://localhost:8080");
         const socket = socketRef.current;
@@ -23,6 +26,13 @@ function Room({ currentRoom }) {
             const data = JSON.parse(ev.data)
             if (data.type === "RECEIVED_MESSAGE") {
                 setReceivedMessages(prev => [...prev, data.payload])
+            }
+            if (data.type === "USER_COUNT") {
+                const newArr = [];
+                for (let i = 1; i <= data.payload; i++) {
+                    newArr.push(`${i}`);
+                }
+                setActiveUsers(newArr)
             }
         }
     }, [currentRoom])
@@ -46,6 +56,14 @@ function Room({ currentRoom }) {
             {receivedMessages.map(msg => <p>{msg}</p>)}
             <input value={messageVal} onChange={e => setMessageVal(e.target.value)} />
             <button onClick={sendMessage}>send</button>
+            <AvatarGroup
+                style={{ marginTop: 35 }}
+                avatars={activeUsers}
+                bold
+                uppercase
+                shadow={1}
+                // Other customization options
+            />
         </div>
     )
 }
